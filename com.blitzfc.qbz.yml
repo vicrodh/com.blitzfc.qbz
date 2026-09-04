@@ -1,21 +1,15 @@
-# Flathub manifest — OFFLINE build of the Slint app (crates/ workspace).
+# Flathub manifest — repack the upstream Qt release bundle.
 #
-# DRAFT prepared 2026-07-02 for the QBZ v2.0 (Tauri -> Slint) release.
-# Before the PR: run ~/Personal/qbz/scripts/update-flathub.sh v2.x.x to
-# point tag/commit at the release and regenerate cargo-sources.json from
-# crates/Cargo.lock. npm-sources.json is gone (no more node build), as is
-# the libayatana-appindicator module chain (Slint tray = ksni, pure Rust).
+# The post-release helper computes both hashes from the published final URLs
+# and audits the two archive layouts. Never hash a local equivalent.
 #
-# Keep in sync with the network twin: qbz repo packaging/flatpak/com.blitzfc.qbz.yml
+# Keep runtime and finish-args in sync with the qbz repository's
+# packaging/flatpak/com.blitzfc.qbz.yml manifest.
 
 app-id: com.blitzfc.qbz
-# freedesktop, not GNOME: a binary repack needs only the base platform
-# (alsa/fontconfig/GL/dbus — the app is Slint/winit, no GTK), it is lighter
-# for users, and the org.gnome.Platform//49 install was failing on the
-# x86_64 builders anyway.
-runtime: org.freedesktop.Platform
-runtime-version: '25.08'
-sdk: org.freedesktop.Sdk
+runtime: org.kde.Platform
+runtime-version: '6.9'
+sdk: org.kde.Sdk
 command: qbz
 finish-args:
   - --share=ipc
@@ -31,6 +25,9 @@ finish-args:
   # includes --device=dri (GPU), so the separate dri entry is dropped.
   - --device=all
 
+  # Let QBZ reserve a DAC before opening it exclusively.
+  - --own-name=org.freedesktop.ReserveDevice1.*
+
   # Native PipeWire access
   - --filesystem=xdg-run/pipewire-0:ro
 
@@ -41,30 +38,32 @@ finish-args:
   - --filesystem=xdg-run/discord-ipc-0
   - --filesystem=xdg-run/app/com.discordapp.Discord:create
 
-  # Tray icon (ksni StatusNotifierItem)
+  # Notifications and tray.
+  - --talk-name=org.freedesktop.Notifications
   - --talk-name=org.kde.StatusNotifierWatcher
 
+  # MPRIS and the logind sleep inhibitor used while playback is active.
+  - --own-name=org.mpris.MediaPlayer2.com.blitzfc.qbz
+  - --system-talk-name=org.freedesktop.login1
+
 modules:
-  # OFFICIAL UPSTREAM BINARIES (same publisher as the GitHub releases): the
-  # Slint UI compiles as one ~1.6M-line generated Rust module whose single
-  # rustc invocation peaks past what the Flathub builders provide — the
-  # 2.0.0 test builds were OOM-killed even at the minimum-memory settings
-  # (jobs=1, cu256, opt<=2). Upstream builds the very same tarballs on
-  # 16 GB CI runners with 18 GB of swap; repackaging them here (Firefox /
-  # Bitwarden pattern) keeps both architectures on Flathub.
+  # Official upstream binaries. Qt is supplied by the KDE runtime; the
+  # release bundle carries qbz, qbzd, AppStream data and the MIT license.
   - name: qbz
     buildsystem: simple
     build-commands:
       - install -Dm755 qbz-dist/qbz /app/bin/qbz
+      - install -Dm755 qbz-dist/qbzd /app/bin/qbzd
       - install -Dm644 com.blitzfc.qbz.desktop /app/share/applications/com.blitzfc.qbz.desktop
-      - install -Dm644 com.blitzfc.qbz.metainfo.xml /app/share/metainfo/com.blitzfc.qbz.metainfo.xml
-      - for size in 32 48 64 128 256; do install -Dm644 "qbz-dist/icons/hicolor/${size}x${size}/apps/qbz.png"
+      - install -Dm644 qbz-dist/com.blitzfc.qbz.metainfo.xml /app/share/metainfo/com.blitzfc.qbz.metainfo.xml
+      - install -Dm644 qbz-dist/LICENSE /app/share/licenses/com.blitzfc.qbz/LICENSE
+      - for size in 32 48 64 128 256 512; do install -Dm644 "qbz-dist/icons/hicolor/${size}x${size}/apps/qbz.png"
         "/app/share/icons/hicolor/${size}x${size}/apps/com.blitzfc.qbz.png"; done
     sources:
       - type: archive
         only-arches: [x86_64]
-        url: https://github.com/vicrodh/qbz/releases/download/v2.0.2/qbz_2.0.2_amd64.tar.gz
-        sha256: 6e0f9e9696a952d566a56328799a2f0f951e0b6e3b1f47ba3c016f92622bea4b
+        url: https://github.com/vicrodh/qbz/releases/download/v2.1.0/qbz_2.1.0_amd64.tar.gz
+        sha256: 0000000000000000000000000000000000000000000000000000000000000000
         dest: qbz-dist
         x-checker-data:
           type: json
@@ -73,8 +72,8 @@ modules:
           url-query: '"https://github.com/vicrodh/qbz/releases/download/v" + $version + "/qbz_" + $version + "_amd64.tar.gz"'
       - type: archive
         only-arches: [aarch64]
-        url: https://github.com/vicrodh/qbz/releases/download/v2.0.2/qbz_2.0.2_aarch64.tar.gz
-        sha256: 13e79cc4935be490be2364d4e91cdc2e86def0f640f2979ef51ba5ae3e2f5531
+        url: https://github.com/vicrodh/qbz/releases/download/v2.1.0/qbz_2.1.0_aarch64.tar.gz
+        sha256: 0000000000000000000000000000000000000000000000000000000000000000
         dest: qbz-dist
         x-checker-data:
           type: json
@@ -83,5 +82,3 @@ modules:
           url-query: '"https://github.com/vicrodh/qbz/releases/download/v" + $version + "/qbz_" + $version + "_aarch64.tar.gz"'
       - type: file
         path: com.blitzfc.qbz.desktop
-      - type: file
-        path: com.blitzfc.qbz.metainfo.xml
