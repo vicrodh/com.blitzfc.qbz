@@ -13,9 +13,9 @@ app-id: com.blitzfc.qbz
 # (alsa/fontconfig/GL/dbus — the app is Slint/winit, no GTK), it is lighter
 # for users, and the org.gnome.Platform//49 install was failing on the
 # x86_64 builders anyway.
-runtime: org.freedesktop.Platform
-runtime-version: '25.08'
-sdk: org.freedesktop.Sdk
+runtime: org.kde.Platform
+runtime-version: '6.9'
+sdk: org.kde.Sdk
 command: qbz
 finish-args:
   - --share=ipc
@@ -63,8 +63,8 @@ modules:
     sources:
       - type: archive
         only-arches: [x86_64]
-        url: https://github.com/vicrodh/qbz/releases/download/v2.0.2/qbz_2.0.2_amd64.tar.gz
-        sha256: 6e0f9e9696a952d566a56328799a2f0f951e0b6e3b1f47ba3c016f92622bea4b
+        url: https://github.com/vicrodh/qbz/releases/download/v2.1.0/qbz_2.1.0_amd64.tar.gz
+        sha256: 3992592693c36575a7df186022f80fa0656771c7293571f39a92ada529fd223b
         dest: qbz-dist
         x-checker-data:
           type: json
@@ -73,8 +73,8 @@ modules:
           url-query: '"https://github.com/vicrodh/qbz/releases/download/v" + $version + "/qbz_" + $version + "_amd64.tar.gz"'
       - type: archive
         only-arches: [aarch64]
-        url: https://github.com/vicrodh/qbz/releases/download/v2.0.2/qbz_2.0.2_aarch64.tar.gz
-        sha256: 13e79cc4935be490be2364d4e91cdc2e86def0f640f2979ef51ba5ae3e2f5531
+        url: https://github.com/vicrodh/qbz/releases/download/v2.1.0/qbz_2.1.0_aarch64.tar.gz
+        sha256: 35a89e5213d298e3b87cc968498570246eaf6cbe48ccfa39fb5d9775372aa85f
         dest: qbz-dist
         x-checker-data:
           type: json
